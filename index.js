@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require("dotenv").config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -37,6 +37,13 @@ app.get('/product',async (req, res) => {
     const result = await cursor.toArray();
     res.send(result);
 })
+app.get('/product/:id', async (req, res) => {
+  const id = req.params.id;
+  const query = { _id: new ObjectId(id) };
+  const result = await productCollection.findOne(query);
+  res.send(result);
+});
+
 
 app.post('/product',async  (req, res)=>{
     const newProduct = req.body;
@@ -44,6 +51,29 @@ app.post('/product',async  (req, res)=>{
     const result = await productCollection.insertOne(newProduct);
     res.send(result)
 })
+app.put('/product/:id', async (req, res) => {
+  const id = req.params.id;
+  const filter = { _id: new ObjectId(id) }
+  const options = { upsert: true };
+  const updatedCard = req.body;
+
+  const card = {
+      $set: {
+          name: updatedCard.name,
+          rating: updatedCard.rating,
+          type: updatedCard.type,
+          price: updatedCard.price,
+          brand_name: updatedCard.brand_name,
+          description: updatedCard.description,
+          photo: updatedCard.photo
+      }
+  }
+
+  const result = await productCollection.updateOne(filter, card, options);
+  res.send(result);
+})
+
+ 
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
